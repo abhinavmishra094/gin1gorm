@@ -15,7 +15,11 @@ func CreateUser(db *gorm.DB) func(c *gin.Context) {
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
-		user.CreateUser(db)
+		u, e := user.CreateUser(db)
+		if e != nil {
+			c.JSON(400, gin.H{"error": e.Error()})
+		}
+		c.JSON(200, u)
 	}
 
 }
