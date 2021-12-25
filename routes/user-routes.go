@@ -77,3 +77,21 @@ func GetUserByID(db *gorm.DB) func(c *gin.Context) {
 		c.JSON(200, userOut)
 	}
 }
+
+func GetUserByUserName(db *gorm.DB) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		userName := c.Param("username")
+		var user models.User
+		err := db.Debug().Where("user_name = ?", userName).Take(&user).Error
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+		}
+		userOut := models.UserOut{
+			ID:       user.ID,
+			UserName: user.UserName,
+			Email:    user.Email,
+			Age:      user.Age,
+		}
+		c.JSON(200, userOut)
+	}
+}

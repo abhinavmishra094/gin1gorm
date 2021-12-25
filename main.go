@@ -34,6 +34,7 @@ func main() {
 	userRoutes := r.Group("/users", middelware.AutherizeJWT())
 	{
 		userRoutes.GET("/id/:id", routes.GetUserByID(db))
+		userRoutes.GET("/username/:username", routes.GetUserByUserName(db))
 	}
 	r.Run()
 }
