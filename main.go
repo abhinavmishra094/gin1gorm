@@ -35,6 +35,8 @@ func main() {
 	{
 		userRoutes.GET("/id/:id", routes.GetUserByID(db))
 		userRoutes.GET("/username/:username", routes.GetUserByUserName(db))
+		userRoutes.DELETE("/delete/id/:id", routes.DeleteUserByID(db))
+		userRoutes.DELETE("/delete/username/:username", routes.DeleteUserByUseName(db))
 	}
 	r.Run()
 }

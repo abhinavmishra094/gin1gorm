@@ -4,6 +4,7 @@ import (
 	"gin1gorm/models"
 	"gin1gorm/services"
 	"gin1gorm/util"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -37,17 +38,16 @@ func Login(db *gorm.DB) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		jwtService := services.NewJWTService()
 		var login models.Login
-
+		var user models.User
 		err := c.BindJSON(&login)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
-		user, err := login.GetUserByUserName(login.UserName, db)
+		u, err := user.GetUserByUserName(login.UserName, db)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
-		}
-		if util.DoPasswordsMatch(user.Password, login.Password) {
-			token, err := jwtService.GenerateToken(user.UserName, false)
+		} else if util.DoPasswordsMatch(u.Password, login.Password) {
+			token, err := jwtService.GenerateToken(u.UserName, false)
 			if err != nil {
 				c.JSON(400, gin.H{"error": err.Error()})
 			}
@@ -64,17 +64,22 @@ func GetUserByID(db *gorm.DB) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var user models.User
-		err := db.Debug().Where("id = ?", id).Take(&user).Error
+		number, err := strconv.ParseUint(string(id), 10, 64)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 		}
-		userOut := models.UserOut{
-			ID:       user.ID,
-			UserName: user.UserName,
-			Email:    user.Email,
-			Age:      user.Age,
+		u, err := user.GetUserByID(number, db)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+		} else {
+			userOut := models.UserOut{
+				ID:       u.ID,
+				UserName: u.UserName,
+				Email:    u.Email,
+				Age:      u.Age,
+			}
+			c.JSON(200, userOut)
 		}
-		c.JSON(200, userOut)
 	}
 }
 
@@ -82,16 +87,45 @@ func GetUserByUserName(db *gorm.DB) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		userName := c.Param("username")
 		var user models.User
-		err := db.Debug().Where("user_name = ?", userName).Take(&user).Error
+		u, err := user.GetUserByUserName(userName, db)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
+		} else {
+			userOut := models.UserOut{
+				ID:       u.ID,
+				UserName: u.UserName,
+				Email:    u.Email,
+				Age:      u.Age,
+			}
+			c.JSON(200, userOut)
 		}
-		userOut := models.UserOut{
-			ID:       user.ID,
-			UserName: user.UserName,
-			Email:    user.Email,
-			Age:      user.Age,
+	}
+}
+
+func DeleteUserByID(db *gorm.DB) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var user models.User
+		number, err := strconv.ParseUint(string(id), 10, 64)
+		_, e := user.DeleteUserByID(number, db)
+		if e != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{"message": "User deleted"})
 		}
-		c.JSON(200, userOut)
+	}
+}
+
+func DeleteUserByUseName(db *gorm.DB) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		username := c.Param("username")
+		var user models.User
+
+		_, e := user.DeleteUserByUserName(username, db)
+		if e != nil {
+			c.JSON(400, gin.H{"error": e.Error()})
+		} else {
+			c.JSON(200, gin.H{"message": "User deleted"})
+		}
 	}
 }
