@@ -30,6 +30,14 @@ type UserOut struct {
 	Age      int    `gorm:"type:int;not null" json:"age" binding:"required,gte=21,lte=60"`
 }
 
+type UserIn struct {
+	ID       uint64 `json:"id" binding:"required"`
+	UserName string `json:"username" binding:"max=100,min=3"`
+	Email    string `json:"email" binding:"email"`
+	Password string `json:"password" binding:"max=50,min=8"`
+	Age      int    `json:"age" binding:"gte=21,lte=60"`
+}
+
 func (u *User) CreateUser(db *gorm.DB) (*User, error) {
 	err := db.Debug().Create(&u).Error
 	if err != nil {
@@ -68,6 +76,32 @@ func (u *User) DeleteUserByID(id uint64, db *gorm.DB) (*User, error) {
 func (u *User) DeleteUserByUserName(user_name string, db *gorm.DB) (*User, error) {
 	var user User
 	err := db.Debug().Where("user_name = ?", user_name).Delete(&user).Error
+	if err != nil {
+		return &User{}, err
+	}
+	return &user, nil
+}
+
+func (u *User) UpdateUser(userIn UserIn, db *gorm.DB) (*User, error) {
+	var user User
+	err := db.Debug().Where("id = ?", userIn.ID).Take(&user).Error
+	if err != nil {
+		return &User{}, err
+	}
+	if userIn.UserName != "" {
+		user.UserName = userIn.UserName
+	}
+	if userIn.Email != "" {
+		user.Email = userIn.Email
+	}
+	if userIn.Password != "" {
+		user.Password = userIn.Password
+	}
+	if userIn.Age != 0 {
+		user.Age = userIn.Age
+	}
+
+	err = db.Debug().Save(&user).Error
 	if err != nil {
 		return &User{}, err
 	}

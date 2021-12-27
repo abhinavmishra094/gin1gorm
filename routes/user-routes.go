@@ -129,3 +129,31 @@ func DeleteUserByUseName(db *gorm.DB) func(c *gin.Context) {
 		}
 	}
 }
+
+func UpdateUser(db *gorm.DB) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var userIn models.UserIn
+		var user models.User
+		err := c.BindJSON(&userIn)
+		println(userIn.Age)
+		if err != nil {
+			c.JSON(400, gin.H{"errorBinding": err.Error()})
+		}
+
+		if userIn.Password != "" {
+			userIn.Password = util.HashPassword(userIn.Password)
+		}
+		u, e := user.UpdateUser(userIn, db)
+		if e != nil {
+			c.JSON(400, gin.H{"errorDatabase": e.Error()})
+		} else {
+			userOut := models.UserOut{
+				ID:       u.ID,
+				UserName: u.UserName,
+				Email:    u.Email,
+				Age:      u.Age,
+			}
+			c.JSON(200, userOut)
+		}
+	}
+}
