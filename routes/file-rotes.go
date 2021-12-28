@@ -42,8 +42,10 @@ func getFiles(path string, ch chan<- []models.File) {
 		log.Println(err.Error())
 	} else {
 		for i, file := range files {
-			f := models.File{ID: i, Name: file.Name(), Path: path + "/" + file.Name()}
-			Files = append(Files, f)
+			if !file.IsDir() {
+				f := models.File{ID: i, Name: file.Name(), Path: path + "/" + file.Name()}
+				Files = append(Files, f)
+			}
 		}
 		ch <- Files
 	}
