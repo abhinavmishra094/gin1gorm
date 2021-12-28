@@ -39,5 +39,10 @@ func main() {
 		userRoutes.DELETE("/delete/username/:username", routes.DeleteUserByUseName(db))
 		userRoutes.PUT("/update/", routes.UpdateUser(db))
 	}
+
+	fileRoutes := r.Group("/files", middelware.AutherizeJWT())
+	{
+		fileRoutes.GET("/dir", routes.GetDir())
+	}
 	r.Run()
 }
