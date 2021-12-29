@@ -7,12 +7,15 @@ import (
 	"gin1gorm/routes"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+var wg sync.WaitGroup
 
 func main() {
 	err := godotenv.Load()
